@@ -1,0 +1,219 @@
+import os, sqlite3, uuid, time, cv2
+import numpy as np
+from datetime import datetime
+
+from flask import (
+    Flask, request, jsonify,
+    render_template, redirect, url_for, session
+)
+from flask_login import (
+    LoginManager, UserMixin, login_user,
+    login_required, logout_user, current_user
+)
+import tensorflow as tf
+
+# ── Flask init ──────────────────────────────────────────────
+app = Flask(__name__)
+app.secret_key = "super‑secret‑key"          # change in prod
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# ── Database helper ────────────────────────────────────────
+DB = "logs.db"
+def get_db():
+    conn = sqlite3.connect(DB)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS users(
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         username TEXT UNIQUE, password TEXT)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS detections(
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         user_id INTEGER,
+         media_type TEXT,
+         result TEXT,
+         confidence REAL,
+         frames INTEGER,
+         duration REAL,
+         ts TEXT)""")
+    # demo user: admin / admin
+    try:
+        c.execute("INSERT INTO users (username,password) VALUES (?,?)",
+                  ("admin","admin"))
+    except sqlite3.IntegrityError:
+        pass
+    conn.commit(); conn.close()
+
+init_db()
+
+# ── Flask‑Login setup ───────────────────────────────────────
+login_manager = LoginManager(app)
+
+class User(UserMixin):
+    def __init__(self, id_, name):
+        self.id = id_
+        self.name = name
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db()
+    row = conn.execute("SELECT id,username FROM users WHERE id=?",
+                       (user_id,)).fetchone()
+    conn.close()
+    return User(row["id"], row["username"]) if row else None
+
+# ── Load Model ──────────────────────────────────────────────
+MODEL = tf.keras.models.load_model("./deepfake_detection_Jupiter_forbalanced_fakeframes.keras")
+
+def preprocess_img(img_bgr):
+    img = cv2.resize(img_bgr, (96, 96))
+    img = img[..., ::-1] / 255.0  # BGR→RGB
+    return np.expand_dims(img.astype("float32"), 0)
+
+# ── Routes ─────────────────────────────────────────────────
+@app.route("/")
+def index():
+    return render_template("detect-image.html")
+
+# ---------- Auth ----------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        u = request.form["username"]
+        p = request.form["password"]
+        row = get_db().execute(
+            "SELECT * FROM users WHERE username=? AND password=?", (u, p)
+        ).fetchone()
+        if row:
+            login_user(User(row["id"], row["username"]))
+            return redirect(url_for("index"))
+        return "Invalid", 401
+    return render_template("login.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
+
+@app.route("/register", methods=["POST"])
+def register():
+    u = request.form["username"]
+    p1 = request.form["password"]
+    p2 = request.form["confirm"]
+    if p1 != p2:
+        return "Password mismatch", 400
+
+    conn = get_db()
+    try:
+        conn.execute("INSERT INTO users (username, password) VALUES (?,?)", (u, p1))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        return "User already exists", 400
+    finally:
+        conn.close()
+
+    return redirect(url_for("login"))
+
+
+# ---------- Detection API ----------
+def record_log(media_type, result, conf, frames, dur):
+    if not current_user.is_authenticated:
+        user_id = None
+    else:
+        user_id = current_user.id
+    conn = get_db()
+    conn.execute("""INSERT INTO detections
+        (user_id, media_type, result, confidence, frames, duration, ts)
+        VALUES (?,?,?,?,?,?,?)""",
+        (user_id, media_type, result, conf, frames, dur,
+         datetime.utcnow().isoformat()))
+    conn.commit(); conn.close()
+
+@app.post("/api/detect-image")
+def detect_image():
+    f = request.files.get("media")
+    if not f: return jsonify(error="No file"), 400
+    img = cv2.imdecode(np.frombuffer(f.read(), np.uint8), cv2.IMREAD_COLOR)
+
+    start = time.time()
+    prob = float(MODEL.predict(preprocess_img(img))[0][0])
+    duration = time.time() - start
+
+    label = "Real" if prob >= 0.5 else "Fake"
+    confidence = prob if label == "Real" else 1 - prob
+    record_log("image", label, confidence, 1, duration)
+
+    return jsonify(label=label, confidence=confidence,
+                   processing_time=duration, frames_analyzed=1)
+
+@app.post("/api/detect-video")
+def detect_video():
+    f = request.files.get("media")
+    if not f: return jsonify(error="No file"), 400
+
+    # Save temp video
+    fname = os.path.join(UPLOAD_FOLDER, f"{uuid.uuid4()}.mp4")
+    f.save(fname)
+
+    # sample 30 frames uniformly
+    cap = cv2.VideoCapture(fname)
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    idxs = np.linspace(0, total-1, num=min(30,total), dtype=int)
+    preds = []
+    start = time.time()
+    for i in idxs:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, int(i))
+        ret, frame = cap.read()
+        if not ret: continue
+        preds.append(float(MODEL.predict(preprocess_img(frame))[0][0]))
+    cap.release()
+    os.remove(fname)
+
+    avg = np.mean(preds)
+    label = "Real" if avg >= 0.5 else "Fake"
+    confidence = avg if label == "Real" else 1 - avg
+    duration = time.time() - start
+    record_log("video", label, confidence, len(preds), duration)
+
+    return jsonify(label=label, confidence=confidence,
+                   processing_time=duration, frames_analyzed=len(preds))
+
+# ---------- Stats ----------
+@app.get("/api/stats")
+@login_required
+def stats():
+    conn = get_db()
+    row  = conn.execute("""
+        SELECT COUNT(*) as total,
+               AVG(confidence) as avg_conf,
+               SUM(result='Fake') as fake_cnt,
+               SUM(result='Real') as real_cnt
+        FROM detections
+    """).fetchone()
+
+    daily = conn.execute("""
+        SELECT substr(ts,1,10) as day, COUNT(*) as uploads
+        FROM detections GROUP BY day ORDER BY day
+    """).fetchall()
+    conn.close()
+
+    return jsonify(
+        total=row["total"],
+        fake=row["fake_cnt"], real=row["real_cnt"],
+        avg_conf=float(row["avg_conf"] or 0),
+        daily=[dict(day=d["day"], uploads=d["uploads"]) for d in daily]
+    )
+
+# ---------- Error handler ----------
+@app.errorhandler(404)
+def page_not_found(_):
+    return "Page not found", 404
+
+# ── Run ────────────────────────────────────────────────────
+if __name__ == "__main__":
+    app.run(debug=True)

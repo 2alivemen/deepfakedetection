@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register – DeepFake Detection</title>
+
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Mint + charcoal colours -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mint: '#57F6E9',
+              'mint-h': '#32D0C2',
+              charcoal: '#0e0e1a',
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body
+    class="min-h-screen flex items-center justify-center bg-charcoal text-white"
+  >
+    <!-- Card -->
+    <form
+      action="/register"
+      method="POST"
+      class="bg-[#181828] w-full max-w-sm mx-auto p-8 rounded-lg shadow-lg"
+    >
+      <h1 class="text-2xl font-bold text-mint text-center mb-6">Sign Up</h1>
+
+      <!-- Username -->
+      <div class="mb-4">
+        <label for="username" class="block mb-1 text-sm">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          required
+          class="w-full bg-[#11121a] border border-white/10 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="mb-4">
+        <label for="password" class="block mb-1 text-sm">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          required
+          class="w-full bg-[#11121a] border border-white/10 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
+        />
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="mb-6">
+        <label for="confirm" class="block mb-1 text-sm"
+          >Confirm Password</label
+        >
+        <input
+          id="confirm"
+          name="confirm"
+          type="password"
+          required
+          class="w-full bg-[#11121a] border border-white/10 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
+        />
+      </div>
+
+      <!-- Submit -->
+      <button
+        type="submit"
+        class="w-full bg-mint text-black font-semibold py-2 rounded hover:bg-mint-h transition"
+      >
+        Create Account
+      </button>
+
+      <!-- Links -->
+      <p class="text-center text-xs text-gray-400 mt-4">
+        Already have an account?
+        <a href="/login" class="text-mint hover:underline">Log in</a>
+      </p>
+      <p class="text-center text-xs text-gray-400 mt-1">
+        <a href="index.html" class="hover:text-mint">&larr; Back Home</a>
+      </p>
+    </form>
+  </body>
+</html>
