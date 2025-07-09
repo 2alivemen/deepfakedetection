@@ -1,6 +1,9 @@
+import base64
 import os, sqlite3, uuid, time, cv2
 import numpy as np
 from datetime import datetime
+from io import BytesIO
+from PIL import Image
 
 from flask import (
     Flask, request, jsonify,
@@ -158,34 +161,63 @@ def detect_image():
 @app.post("/api/detect-video")
 def detect_video():
     f = request.files.get("media")
-    if not f: return jsonify(error="No file"), 400
+    if not f:
+        return jsonify(error="No file"), 400
 
-    # Save temp video
+    # ---- Save temp video --------------------------------------------------
     fname = os.path.join(UPLOAD_FOLDER, f"{uuid.uuid4()}.mp4")
     f.save(fname)
 
-    # sample 30 frames uniformly
-    cap = cv2.VideoCapture(fname)
+    cap   = cv2.VideoCapture(fname)
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    idxs = np.linspace(0, total-1, num=min(30,total), dtype=int)
-    preds = []
-    start = time.time()
+    idxs  = np.linspace(0, total-1, num=min(30, total), dtype=int)
+
+    preds          = []
+    sample_frames  = []
+    start          = time.time()
+
     for i in idxs:
         cap.set(cv2.CAP_PROP_POS_FRAMES, int(i))
         ret, frame = cap.read()
-        if not ret: continue
+
+        # Skip invalid frames
+        if not ret or frame is None:
+            continue
+
+        # Predict
         preds.append(float(MODEL.predict(preprocess_img(frame))[0][0]))
+
+        # Collect first 5 frames as thumbnails
+        if len(sample_frames) < 5:
+            ok, buff = cv2.imencode(".jpg", frame)
+            if ok:
+                b64 = base64.b64encode(buff).decode("utf-8")
+                sample_frames.append(f"data:image/jpeg;base64,{b64}")
+
     cap.release()
     os.remove(fname)
 
-    avg = np.mean(preds)
+    if not preds:
+        return jsonify(error="Could not read frames"), 500
+
+    # ---- Aggregate results -----------------------------------------------
+    avg   = float(np.mean(preds))
     label = "Real" if avg >= 0.5 else "Fake"
     confidence = avg if label == "Real" else 1 - avg
-    duration = time.time() - start
+    duration   = time.time() - start
+
+    # Log to DB (if you have record_log function)
     record_log("video", label, confidence, len(preds), duration)
-    frame_confidences = preds[:]  
-    return jsonify(label=label, confidence=confidence,
-                   processing_time=duration, frames_analyzed=len(preds), frame_confidences=frame_confidences)
+
+    # ---- Return JSON ------------------------------------------------------
+    return jsonify(
+        label            = label,
+        confidence       = confidence,
+        processing_time  = duration,
+        frames_analyzed  = len(preds),
+        frame_confidences= preds,
+        sample_frames    = sample_frames
+    )
 
 # ---------- Stats ----------
 @app.get("/api/stats")

@@ -213,17 +213,22 @@
   </h2>
 
   <div style="display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-    <p><span style="color:var(--primary-accent)">Label:</span> <span id="rLabel"></span></p>
-    <p><span style="color:var(--primary-accent)">Confidence:</span> <span id="rConf"></span></p>
-    <p><span style="color:var(--primary-accent)">Frames:</span> <span id="rFrames"></span></p>
-    <p><span style="color:var(--primary-accent)">Time:</span> <span id="rTime"></span> s</p>
+    <p><span style="color:var(--primary-accent)">Label:</span> <span class="text-white" id="rLabel"></span></p>
+    <p><span style="color:var(--primary-accent)">Confidence:</span> <span class="text-white" id="rConf"></span></p>
+    <p><span style="color:var(--primary-accent)">Frames:</span> <span class="text-white" id="rFrames"></span></p>
+    <p><span style="color:var(--primary-accent)">Time taken to analyse:</span> <span class="text-white" id="rTime">s</span> </p>
   </div>
 
   <!-- Pie chart -->
   <canvas id="pieChart" style="margin-top:1.5rem;"></canvas>
 </div>
-
+  
     </section>
+    <!-- Sample Frames -->
+<p class="text-lg font-semibold mx-auto"><span style="color:var(--primary-accent)">Sample of Analysed frames</span> </p>
+
+<div id="frameSamples" class="mt-6 flex flex-wrap gap-4 justify-center"></div>
+
   </main>
 
   <!-- ───── FOOTER ─────────────────────────────────────────── -->
@@ -324,7 +329,18 @@ btn.addEventListener('click', async e => {
     const res = await fetch('/api/detect-video', { method:'POST', body:fd });
     const js  = await res.json();
     if (js.error) throw js.error;
+    const frameContainer = document.getElementById("frameSamples");
+    frameContainer.innerHTML = "";  // clear old
+    js.sample_frames.forEach(src => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "Sample frame";
+    img.className = "rounded-lg border-2 border-cyan-400 shadow-lg hover:scale-105 transition-transform duration-300";
+    img.style.width = "160px";
+    img.style.height = "auto";
 
+    frameContainer.appendChild(img);
+});
     // fill values
     lbl.textContent  = js.label;
     conf.textContent = (js.confidence*100).toFixed(1)+' %';
