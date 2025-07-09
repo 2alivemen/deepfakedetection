@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DeepFake Detection</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ①‑A  ▸ Add Chart.js just after Tailwind CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* Custom colors extracted from the image */
     :root {
@@ -175,6 +177,7 @@
     }
 
   </style>
+  
 </head>
 
 <body>
@@ -200,6 +203,26 @@
       <p style="color: var(--text-muted); font-size: 0.875rem; text-align:center; margin-top:1.75rem; font-weight: 500;">
         Supported formats: <strong>MP4, AVI, MOV</strong> (Max size: 100MB)
       </p>
+
+      <!-- ①‑B  ▸ Inside <section class="card"> AFTER the <p> that lists formats -->
+<!-- result card – hidden by default -->
+<div id="resultCard"
+     class="card mt-10 opacity-0 pointer-events-none transition-all duration-300">
+  <h2 style="color:var(--primary-accent);font-weight:600;text-align:center;margin-bottom:1rem;">
+    Analysis Result
+  </h2>
+
+  <div style="display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+    <p><span style="color:var(--primary-accent)">Label:</span> <span id="rLabel"></span></p>
+    <p><span style="color:var(--primary-accent)">Confidence:</span> <span id="rConf"></span></p>
+    <p><span style="color:var(--primary-accent)">Frames:</span> <span id="rFrames"></span></p>
+    <p><span style="color:var(--primary-accent)">Time:</span> <span id="rTime"></span> s</p>
+  </div>
+
+  <!-- Pie chart -->
+  <canvas id="pieChart" style="margin-top:1.5rem;"></canvas>
+</div>
+
     </section>
   </main>
 
@@ -271,6 +294,70 @@
     </div>
   </div>
 </footer>
+
+
+
+
+<!-- ①‑C  ▸ Just before </body> add this tiny JS (keeps your design) -->
+<script>
+const btn   = document.querySelector('.btn-analyze');
+const fileI = document.querySelector('input[type=file]');
+const card  = document.getElementById('resultCard');
+const lbl   = document.getElementById('rLabel');
+const conf  = document.getElementById('rConf');
+const fr    = document.getElementById('rFrames');
+const tm    = document.getElementById('rTime');
+let  chart;
+
+btn.addEventListener('click', async e => {
+  e.preventDefault();
+  const f = fileI.files[0];
+  if (!f) return alert('Choose a video first');
+
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  const fd = new FormData();
+  fd.append('media', f);
+
+  try {
+    const res = await fetch('/api/detect-video', { method:'POST', body:fd });
+    const js  = await res.json();
+    if (js.error) throw js.error;
+
+    // fill values
+    lbl.textContent  = js.label;
+    conf.textContent = (js.confidence*100).toFixed(1)+' %';
+    fr.textContent   = js.frames_analyzed;
+    tm.textContent   = js.processing_time.toFixed(2);
+
+    // pie chart (Fake vs Real)
+    const vals = js.label === 'Fake'
+        ? [js.confidence, 1-js.confidence]
+        : [1-js.confidence, js.confidence];
+
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('pieChart'), {
+      type:'doughnut',
+      data:{
+        labels:['Fake','Real'],
+        datasets:[{ data:vals, backgroundColor:['#ff4f4f', '#57f4d4'] }]
+      },
+      options:{plugins:{legend:{labels:{color:'#ffffff'}}}}
+    });
+
+    // reveal card
+    card.style.opacity = 1;
+    card.style.pointerEvents = 'auto';
+
+  } catch(err){
+    alert('Server error: '+err);
+  } finally{
+    btn.textContent='Analyze Video';
+    btn.disabled=false;
+  }
+});
+</script>
 
 </body>
 

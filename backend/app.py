@@ -77,7 +77,11 @@ def preprocess_img(img_bgr):
 # ── Routes ─────────────────────────────────────────────────
 @app.route("/")
 def index():
-    return render_template("detect-image.html")
+    return render_template("index.html")
+
+@app.route("/detect-video")
+def detect_video_page():
+    return render_template("detectvideo.html")
 
 # ---------- Auth ----------
 @app.route("/login", methods=["GET", "POST"])
@@ -179,9 +183,9 @@ def detect_video():
     confidence = avg if label == "Real" else 1 - avg
     duration = time.time() - start
     record_log("video", label, confidence, len(preds), duration)
-
+    frame_confidences = preds[:]  
     return jsonify(label=label, confidence=confidence,
-                   processing_time=duration, frames_analyzed=len(preds))
+                   processing_time=duration, frames_analyzed=len(preds), frame_confidences=frame_confidences)
 
 # ---------- Stats ----------
 @app.get("/api/stats")
