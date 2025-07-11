@@ -31,7 +31,7 @@ class User(UserMixin):
         self.id = id
         self.username = username
 
-        
+
 # ── Database helper ────────────────────────────────────────
 DB = "logs.db"
 def get_db():
@@ -101,6 +101,9 @@ def detect_video_page():
 def status_page():
     return render_template("status.html")
 
+@app.route("/detect-image")
+def detect_image_page():
+    return render_template("detectimage.html")
 # ---------- Auth ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -172,8 +175,13 @@ def record_log(media_type, result, conf, frames, dur):
 @app.post("/api/detect-image")
 def detect_image():
     f = request.files.get("media")
-    if not f: return jsonify(error="No file"), 400
-    img = cv2.imdecode(np.frombuffer(f.read(), np.uint8), cv2.IMREAD_COLOR)
+    if not f:
+        return jsonify(error="No file uploaded"), 400
+
+    img_np = np.frombuffer(f.read(), np.uint8)
+    img = cv2.imdecode(img_np, cv2.IMREAD_COLOR)
+    if img is None:
+        return jsonify(error="Invalid image file"), 400
 
     start = time.time()
     prob = float(MODEL.predict(preprocess_img(img))[0][0])
@@ -181,10 +189,16 @@ def detect_image():
 
     label = "Real" if prob >= 0.5 else "Fake"
     confidence = prob if label == "Real" else 1 - prob
+
     record_log("image", label, confidence, 1, duration)
 
-    return jsonify(label=label, confidence=confidence,
-                   processing_time=duration, frames_analyzed=1)
+    return jsonify(
+        label=label,
+        confidence=confidence,
+        processing_time=duration,
+        frames_analyzed=1
+    )
+
 
 @app.post("/api/detect-video")
 def detect_video():

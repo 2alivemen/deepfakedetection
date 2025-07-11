@@ -5,42 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Detect DeepFake Image</title>
 
-    <!-- Tailwind Play CDN (works offline after first load) -->
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com/"></script>
 
-    <!-- Custom mint shortcuts -->
-     <script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        mint: '#57F6E9',   // main mint
-        'mint-h': '#32D0C2' // hover shade
-      }
-    }
-  }
-}
-</script>
-    <style>
-      @layer utilities {
-        .text-mint  { color:#57F6E9; }
-        .bg-mint    { background-color:#57F6E9; }
-        .bg-mint-h  { background-color:#32D0C2; }
-      }
-    </style>
+    <!-- Chart.js for Pie Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom colors -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              mint: '#57F6E9',
+              'mint-h': '#32D0C2',
+              charcoal: '#0e0e1a'
+            }
+          }
+        }
+      };
+    </script>
   </head>
 
-  <body class="min-h-screen bg-[#0e0e1a] text-white font-sans overflow-x-hidden">
+  <body class="min-h-screen bg-charcoal text-white font-sans overflow-x-hidden">
 
-    <!-- ───── NAVBAR ───────────────────────────────────────── -->
+    <!-- Navbar -->
     <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
       <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-        <!-- Brand -->
-        <a href="index.html" class="text-lg font-extrabold tracking-wide text-mint">
-          DeepFake Detection
-        </a>
-
-        <!-- Right‑side links -->
+        <a href="index.html" class="text-lg font-extrabold tracking-wide text-mint">DeepFake Detection</a>
         <div class="flex items-center gap-6 text-sm">
           <a href="detectvideo.html"
              class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">
@@ -51,13 +43,9 @@ tailwind.config = {
       </div>
     </header>
 
-    <!-- ───── MAIN CONTENT ─────────────────────────────────── -->
+    <!-- Main Content -->
     <main class="pt-24 pb-20 px-6 flex flex-col items-center">
-
-      <!-- Title -->
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-mint mb-2">
-        Detect DeepFake Image
-      </h1>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-mint mb-2">Detect DeepFake Image</h1>
       <p class="text-gray-300 mb-12 text-center max-w-xl">
         Upload your image for AI‑powered analysis to detect potential manipulation.
       </p>
@@ -66,9 +54,7 @@ tailwind.config = {
       <div class="bg-[#181828] rounded-lg p-10 w-full max-w-md shadow-lg">
         <h2 class="text-lg font-semibold text-center mb-6">Upload an Image</h2>
 
-        <input type="file"
-               id="imgInput"
-               accept="image/*"
+        <input type="file" id="imgInput" accept="image/*"
                class="file:mr-4 file:py-2 file:px-4
                       file:rounded file:border-0
                       file:text-sm file:font-semibold
@@ -77,27 +63,29 @@ tailwind.config = {
                       w-full text-sm text-gray-300 mb-6" />
 
         <button id="detectBtn"
-                class="bg-mint w-full  text-black font-bold py-2.5 rounded hover:bg-mint-h transition">
+                class="bg-mint w-full text-black font-bold py-2.5 rounded hover:bg-mint-h transition">
           Detect
         </button>
 
-        <!-- Result placeholder -->
-        <div id="result"
-             class="mt-8 text-center text-lg font-semibold hidden">
-          <!-- Filled by JS -->
+        <!-- Result -->
+        <div id="result" class="mt-8 hidden text-center">
+          <p id="resultText" class="text-lg font-semibold mb-4"></p>
+          <canvas id="pieChart" width="200" height="200"></canvas>
         </div>
       </div>
     </main>
 
-    <!-- ───── OPTIONAL JS (fetch to backend) ───────────────── -->
+    <!-- JavaScript -->
     <script>
       const btn   = document.getElementById('detectBtn');
       const fileI = document.getElementById('imgInput');
       const resEl = document.getElementById('result');
+      const resText = document.getElementById('resultText');
+      let chart;
 
       btn.addEventListener('click', async () => {
         const file = fileI.files[0];
-        if (!file) { alert('Please choose an image.'); return; }
+        if (!file) return alert('Please choose an image.');
 
         btn.textContent = 'Detecting...';
         btn.disabled = true;
@@ -106,11 +94,35 @@ tailwind.config = {
         fd.append('media', file);
 
         try {
-          const r  = await fetch('/api/detect-image', { method:'POST', body: fd });
+          const r = await fetch('/api/detect-image', { method: 'POST', body: fd });
           const js = await r.json();   // { label:'Fake', confidence:0.92 }
 
+          const confPct = (js.confidence * 100).toFixed(1);
+          resText.textContent = `${js.label} – ${confPct}% confidence`;
           resEl.classList.remove('hidden');
-          resEl.textContent = `${js.label}  –  ${(js.confidence*100).toFixed(1)}%`;
+
+          const vals = js.label === 'Fake'
+            ? [js.confidence, 1 - js.confidence]
+            : [1 - js.confidence, js.confidence];
+
+          if (chart) chart.destroy();
+          chart = new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Fake', 'Real'],
+              datasets: [{
+                data: vals,
+                backgroundColor: ['#ff4f4f', '#57f4d4']
+              }]
+            },
+            options: {
+              plugins: {
+                legend: {
+                  labels: { color: '#fff' }
+                }
+              }
+            }
+          });
 
         } catch (err) {
           alert('Error connecting to server');
