@@ -34,6 +34,14 @@
 </head>
 
 <body>
+  <!-- Navbar -->
+  <header class="bg-[#111]/95 backdrop-blur px-6 py-3 flex justify-between items-center sticky top-0 z-50">
+    <a href="/" class="text-lg font-bold tracking-wide text-[#57f4d4]">DeepFake Detection</a>
+    <div id="authBtnContainer">
+      <!-- JS will fill this with Login or Logout -->
+    </div>
+  </header>
+
   <h1>Admin Dashboard - DeepFake Detection Stats</h1>
 
   <section class="card bg-[#182344a6] border border-cyan-300 max-w-5xl mx-auto p-8 rounded-xl">
@@ -105,6 +113,21 @@
     }
 
     fetchStats();
+
+    // Toggle login/logout button
+    fetch('/api/check-login')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('authBtnContainer');
+        if (data.logged_in) {
+          container.innerHTML = `<a href="/logout" class="text-sm text-white hover:text-[#57f4d4] transition">Logout</a>`;
+        } else {
+          container.innerHTML = `<a href="/login" class="text-sm text-white hover:text-[#57f4d4] transition">Login</a>`;
+        }
+      })
+      .catch(err => {
+        console.error("Login check failed", err);
+      });
   </script>
 </body>
 

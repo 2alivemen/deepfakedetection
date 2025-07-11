@@ -80,6 +80,12 @@ def load_user(user_id):
     conn.close()
     return User(row["id"], row["username"]) if row else None
 
+
+@app.route("/api/check-login")
+def check_login():
+    return jsonify(logged_in=current_user.is_authenticated)
+
+
 # ── Load Model ──────────────────────────────────────────────
 MODEL = tf.keras.models.load_model("./deepfake_detection_Jupiter_forbalanced_fakeframes.keras")
 
