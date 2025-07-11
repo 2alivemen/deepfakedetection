@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login – DeepFake Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – RealVision</title>
 
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -18,59 +17,96 @@
           }
         }
       }
-    };
+    }
   </script>
 </head>
+<body class="bg-black text-white font-sans flex flex-col min-h-screen">
 
-<body class="min-h-screen flex items-center justify-center bg-charcoal text-white">
-  <!-- Card -->
-  <form method="POST" action="/login"
-        class="bg-[#181828] w-full max-w-sm mx-auto p-8 rounded-lg shadow-lg">
-    
-    <h1 class="text-2xl font-bold text-mint text-center mb-6">Login</h1>
-
-    <!-- Show error if login fails -->
-    {% if request.args.get('error') %}
-      <div class="bg-red-600 text-white text-sm rounded p-2 mb-4 text-center">
-        Invalid username or password.
+  <!-- Navbar -->
+  <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="/detect-video" class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">Video Detect</a>
+        <a href="/detect-image" class="hidden sm:block hover:text-mint transition">Image Detect</a>
+        {% if current_user.is_authenticated %}
+        <a href="/logout" class="hidden sm:block hover:text-mint transition">Logout</a>
+        {% endif %}
       </div>
-    {% endif %}
+    </div>
+  </header>
 
-    <!-- Username -->
-    <div class="mb-4">
-      <label for="username" class="block mb-1 text-sm">Username</label>
-      <input
-        id="username"
-        name="username"
-        type="text"
-        required
-        class="w-full bg-[#11121a] border border-white/10 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
-      />
+  <!-- Main Content -->
+  <main class="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
+    <div class="bg-[#181828] p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h1 class="text-3xl font-bold text-mint text-center mb-6">Login to RealVision</h1>
+      <form action="/login" method="POST" class="space-y-5">
+        <div>
+          <label for="email" class="block mb-1 text-sm font-semibold text-gray-300">Email</label>
+          <input type="email" name="email" required
+                 class="w-full px-4 py-2 rounded bg-[#0e0e1a] border border-mint text-white focus:outline-none focus:ring-2 focus:ring-mint">
+        </div>
+        <div>
+          <label for="password" class="block mb-1 text-sm font-semibold text-gray-300">Password</label>
+          <input type="password" name="password" required
+                 class="w-full px-4 py-2 rounded bg-[#0e0e1a] border border-mint text-white focus:outline-none focus:ring-2 focus:ring-mint">
+        </div>
+        <button type="submit"
+                class="w-full bg-mint text-black font-bold py-2 rounded hover:bg-mint-h transition">
+          Login
+        </button>
+      </form>
+      <p class="text-sm text-center mt-4 text-gray-400">
+        Don't have an account?
+        <a href="/register" class="text-mint hover:underline">Register</a>
+      </p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#0b0b0b] text-gray-300">
+    <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
+        <p class="text-sm leading-relaxed">
+          RealVision is a research‑driven platform dedicated to detecting DeepFake
+          images and videos in real time using AI and CNN models.
+        </p>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-mint text-lg font-semibold mb-4">Quick Links</h3>
+        <ul class="text-sm space-y-1">
+          <li><a href="/" class="hover:text-white">Home</a></li>
+          <li><a href="/detect-video" class="hover:text-white">Detect Video</a></li>
+          <li><a href="/detect-image" class="hover:text-white">Detect Image</a></li>
+          <li><a href="/about" class="hover:text-white">About</a></li>
+          <li><a href="/contact" class="hover:text-white">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">Contact Us</h3>
+        <p class="text-sm">Shreesha Hegde</p>
+        <p class="text-sm">BMS College of Engineering</p>
+        <p class="text-sm">shreesha.mca23@bmsce.ac.in</p>
+        <p class="text-sm">+91 98765 43210</p>
+      </div>
     </div>
 
-    <!-- Password -->
-    <div class="mb-6">
-      <label for="password" class="block mb-1 text-sm">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        required
-        class="w-full bg-[#11121a] border border-white/10 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-mint text-sm"
-      />
+    <div class="border-t border-white/10">
+      <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between">
+        <p class="text-xs text-gray-400">© 2025 RealVision. All rights reserved.</p>
+        <div class="flex gap-4 mt-3 sm:mt-0">
+          <a href="#" class="text-gray-400 hover:text-white transition" aria-label="GitHub">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill-rule="evenodd"
+                    d="M12 2C6.477 2 2 6.527 2 12.063c0 4.438 2.865 8.197 6.839 9.525.5.092.682-.219.682-.488 0-.24-.009-.875-.014-1.718-2.782.61-3.369-1.359-3.369-1.359-.454-1.166-1.11-1.478-1.11-1.478-.909-.63.069-.618.069-.618 1.004.072 1.533 1.04 1.533 1.04.892 1.547 2.341 1.1 2.91.842.091-.653.35-1.1.636-1.353-2.221-.256-4.556-1.123-4.556-4.997 0-1.104.39-2.006 1.029-2.714-.103-.257-.446-1.293.098-2.696 0 0 .84-.27 2.75 1.033a9.404 9.404 0 012.5-.341c.85.004 1.705.116 2.504.341 1.908-1.304 2.747-1.033 2.747-1.033.546 1.403.203 2.439.1 2.696.642.708 1.028 1.61 1.028 2.714 0 3.881-2.339 4.738-4.566 4.988.359.31.678.919.678 1.852 0 1.337-.012 2.416-.012 2.744 0 .27.18.584.688.485A10.045 10.045 0 0022 12.063C22 6.527 17.523 2 12 2z"
+                    clip-rule="evenodd" />
+            </svg>
+          </a>
+        </div>
+      </div>
     </div>
+  </footer>
 
-    <!-- Submit -->
-    <button
-      type="submit"
-      class="w-full bg-mint text-black font-semibold py-2 rounded hover:bg-mint-h transition">
-      Sign In
-    </button>
-
-    <!-- Optional: link back -->
-    <p class="text-center text-xs text-gray-400 mt-4">
-      <a href="/" class="hover:text-mint">&larr; Back Home</a>
-    </p>
-  </form>
 </body>
 </html>

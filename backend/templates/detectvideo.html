@@ -1,15 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DeepFake Detection</title>
+  <title>Real Vision - Video Detection</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- ①‑A  ▸ Add Chart.js just after Tailwind CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Custom colors extracted from the image */
     :root {
       --bg-dark: #0e183a;
       --nav-bg: #191919;
@@ -28,13 +25,11 @@
       background-color: var(--nav-bg);
     }
 
-    /* Link style for "DeepFake Detection" brand and button */
     .brand,
     .btn-detect {
       color: var(--primary-accent);
       font-weight: 600;
       font-size: 1.125rem;
-      line-height: 1.75rem;
     }
 
     .btn-detect {
@@ -44,26 +39,21 @@
       border-radius: 0.25rem;
       box-shadow: 0 0.25rem 0.5rem var(--button-shadow-color);
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
 
     .btn-detect:hover,
     .btn-detect:focus {
       background-color: var(--primary-accent);
       color: #0e183a;
-      outline: none;
     }
 
-    /* Logout link */
     .logout {
       color: white;
       font-weight: 500;
       cursor: pointer;
       font-size: 0.875rem;
-      line-height: 1.25rem;
     }
 
-    /* Container card */
     .card {
       background-color: rgba(24, 35, 68, 0.65);
       border-radius: 0.5rem;
@@ -73,120 +63,64 @@
       margin: auto;
     }
 
-    /* Custom file input style */
     input[type="file"] {
       color: transparent;
-      cursor: pointer;
       width: 100%;
       height: 3.25rem;
       border-radius: 0.375rem;
       border: 2px dashed var(--input-border);
-      background-color: transparent;
-      text-align: center;
       padding-top: 0.75rem;
-      font-size: 1rem;
-      color: var(--primary-accent);
+      text-align: center;
       font-weight: 500;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    input[type="file"]::-webkit-file-upload-button {
-      visibility: hidden;
     }
 
     input[type="file"]::before {
       content: 'Choose Video';
       color: var(--primary-accent);
-      display: inline-block;
-      background: transparent;
-      border: none;
-      padding: 0;
-      outline: none;
-      white-space: nowrap;
-      -webkit-user-select: none;
-      cursor: pointer;
       font-weight: 600;
     }
 
-    input[type="file"]:hover {
-      background-color: rgba(87, 244, 212, 0.15);
-      border-color: var(--primary-accent);
-    }
-
-    /* Analyze button */
     .btn-analyze {
       background-color: var(--primary-accent);
       font-weight: 700;
       font-size: 1.125rem;
       color: var(--bg-dark);
-      border-radius: 0.375rem;
       padding: 0.75rem 1.5rem;
       margin-top: 1.5rem;
+      border-radius: 0.375rem;
       cursor: pointer;
       border: none;
-      box-shadow: 0 6px 10px var(--button-shadow-color);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .btn-analyze:hover,
-    .btn-analyze:focus {
-      background-color: #3ae1cc;
-      box-shadow: 0 8px 20px #3ae1ccaa;
-      outline: none;
-    }
-
-    /* Header text */
     h1 {
       color: var(--primary-accent);
       font-weight: 700;
       font-size: 2.25rem;
-      line-height: 2.5rem;
-      margin-bottom: 0.5rem;
       text-align: center;
-      text-shadow: 0 0 6px var(--primary-accent);
+      margin-bottom: 0.5rem;
     }
 
     p.description {
       color: var(--text-muted);
-      font-weight: 500;
+      text-align: center;
       font-size: 1rem;
-      line-height: 1.5rem;
       margin-bottom: 2rem;
-      text-align: center;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
     }
-
-    footer-text {
-      color: var(--text-muted);
-      text-align: center;
-      font-size: 0.875rem;
-      margin-top: 1.5rem;
-      font-weight: 500;
-    }
-
-    /* Responsive spacing for nav items */
-    nav > div {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 1024px;
-      margin: 0 auto;
-      padding: 0.5rem 1rem;
-    }
-
   </style>
-  
 </head>
 
 <body>
+  <!-- NAVBAR -->
   <nav>
-    <div>
-      <a href="./index.html" class="brand" tabindex="1">DeepFake Detection</a>
+    <div class="flex justify-between items-center px-6 py-3 max-w-6xl mx-auto">
+      <a href="/" class="brand">Real Vision</a>
       <div class="flex items-center space-x-6">
-        <button class="btn-detect" tabindex="3">Image Detect</button>
-        <a href="#" class="logout" tabindex="4">Logout</a>
+        <a href="/detect-image" class="btn-detect">Image Detect</a>
+        {% if current_user.is_authenticated %}
+          <a href="/logout" class="logout">Logout</a>
+        {% else %}
+          <a href="/login" class="logout">Login</a>
+        {% endif %}
       </div>
     </div>
   </nav>
@@ -197,185 +131,127 @@
 
     <section class="card">
       <form>
-        <input type="file" accept=".mp4, .avi, .mov" tabindex="2" />
-        <button type="submit" class="btn-analyze" tabindex="3">Analyze Video</button>
+        <input type="file" accept=".mp4, .avi, .mov" />
+        <button type="submit" class="btn-analyze">Analyze Video</button>
       </form>
-      <p style="color: var(--text-muted); font-size: 0.875rem; text-align:center; margin-top:1.75rem; font-weight: 500;">
+
+      <p class="text-sm text-center mt-6 text-muted">
         Supported formats: <strong>MP4, AVI, MOV</strong> (Max size: 100MB)
       </p>
 
-      <!-- ①‑B  ▸ Inside <section class="card"> AFTER the <p> that lists formats -->
-<!-- result card – hidden by default -->
-<div id="resultCard"
-     class="card mt-10 opacity-0 pointer-events-none transition-all duration-300">
-  <h2 style="color:var(--primary-accent);font-weight:600;text-align:center;margin-bottom:1rem;">
-    Analysis Result
-  </h2>
-
-  <div style="display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-    <p><span style="color:var(--primary-accent)">Label:</span> <span class="text-white" id="rLabel"></span></p>
-    <p><span style="color:var(--primary-accent)">Confidence:</span> <span class="text-white" id="rConf"></span></p>
-    <p><span style="color:var(--primary-accent)">Frames:</span> <span class="text-white" id="rFrames"></span></p>
-    <p><span style="color:var(--primary-accent)">Time taken to analyse:</span> <span class="text-white" id="rTime">s</span> </p>
-  </div>
-
-  <!-- Pie chart -->
-  <canvas id="pieChart" style="margin-top:1.5rem;"></canvas>
-</div>
-  
+      <!-- RESULT CARD -->
+      <div id="resultCard" class="card mt-10 opacity-0 pointer-events-none transition-all duration-300">
+        <h2 style="color:var(--primary-accent);text-align:center;margin-bottom:1rem;">Analysis Result</h2>
+        <div style="display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+          <p><span style="color:var(--primary-accent)">Label:</span> <span class="text-white" id="rLabel"></span></p>
+          <p><span style="color:var(--primary-accent)">Confidence:</span> <span class="text-white" id="rConf"></span></p>
+          <p><span style="color:var(--primary-accent)">Frames:</span> <span class="text-white" id="rFrames"></span></p>
+          <p><span style="color:var(--primary-accent)">Time:</span> <span class="text-white" id="rTime">s</span></p>
+        </div>
+        <canvas id="pieChart" style="margin-top:1.5rem;"></canvas>
+      </div>
     </section>
-    <!-- Sample Frames -->
-<p class="text-lg font-semibold mx-auto"><span style="color:var(--primary-accent)">Sample of Analysed frames</span> </p>
 
-<div id="frameSamples" class="mt-6 flex flex-wrap gap-4 justify-center"></div>
-
+    <p class="text-lg font-semibold mx-auto mt-8 text-center text-mint">Sample of Analyzed Frames</p>
+    <div id="frameSamples" class="mt-6 flex flex-wrap gap-4 justify-center"></div>
   </main>
 
-  <!-- ───── FOOTER ─────────────────────────────────────────── -->
-<footer class="bg-[#0b0b0b] text-gray-300">
-  <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
-    <!-- column 1 – about -->
-    <div>
-      <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
-      <p class="text-sm leading-relaxed">
-        RealVision is a research‑driven platform dedicated to detecting DeepFake
-        images and videos in real time. Our mission is to safeguard digital
-        integrity with cutting‑edge AI.
-      </p>
-    </div>
-
-    <!-- column 2 – quick links -->
-    <div class="space-y-2">
-      <h3 class="text-mint text-lg font-semibold mb-4">Quick Links</h3>
-      <ul class="text-sm space-y-1">
-        <li><a href="#features" class="hover:text-white">Features</a></li>
-        <li><a href="#" class="hover:text-white">Detect Video</a></li>
-        <li><a href="#" class="hover:text-white">Detect Image</a></li>
-        <li><a href="#about" class="hover:text-white">About Us</a></li>
-        <li><a href="#contact" class="hover:text-white">Contact</a></li>
-      </ul>
-    </div>
-
-    <!-- column 3 – contact -->
-    <div>
-      <h3 class="text-mint text-lg font-semibold mb-4">Contact Us</h3>
-      <p class="text-sm">Shreesha Hegde</p>
-      <p class="text-sm">BMS College of Engineering</p>
-      <p class="text-sm"><href mailto>shreesha.mca23@bmsce.ac.in</p>
-      <p class="text-sm">+91&nbsp;90710&nbsp;23691</p>
-    </div>
-  </div>
-
-  <!-- bottom bar -->
-  <div class="border-t border-white/10">
-    <div
-      class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between"
-    >
-      <p class="text-xs text-gray-400">
-        © 2025 TrueVision. All rights reserved.
-      </p>
-      <div class="flex gap-4 mt-3 sm:mt-0">
-        <a
-          href="#"
-          aria-label="GitHub"
-          class="text-gray-400 hover:text-white transition"
-        >
-          <!-- GitHub icon (Heroicons) -->
-          <svg
-            class="w-5 h-5"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M12 2C6.477 2 2 6.527 2 12.063c0 4.438 2.865 8.197 6.839 9.525.5.092.682-.219.682-.488 0-.24-.009-.875-.014-1.718-2.782.61-3.369-1.359-3.369-1.359-.454-1.166-1.11-1.478-1.11-1.478-.909-.63.069-.618.069-.618 1.004.072 1.533 1.04 1.533 1.04.892 1.547 2.341 1.1 2.91.842.091-.653.35-1.1.636-1.353-2.221-.256-4.556-1.123-4.556-4.997 0-1.104.39-2.006 1.029-2.714-.103-.257-.446-1.293.098-2.696 0 0 .84-.27 2.75 1.033a9.404 9.404 0 012.5-.341c.85.004 1.705.116 2.504.341 1.908-1.304 2.747-1.033 2.747-1.033.546 1.403.203 2.439.1 2.696.642.708 1.028 1.61 1.028 2.714 0 3.881-2.339 4.738-4.566 4.988.359.31.678.919.678 1.852 0 1.337-.012 2.416-.012 2.744 0 .27.18.584.688.485A10.045 10.045 0 0022 12.063C22 6.527 17.523 2 12 2z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </a>
-        <!-- Add more social icons as needed -->
+  <!-- FOOTER -->
+  <footer class="bg-[#0b0b0b] text-gray-300 mt-20">
+    <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
+        <p class="text-sm leading-relaxed">
+          RealVision is a research‑driven platform to detect DeepFakes in real time and promote digital truth.
+        </p>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-mint text-lg font-semibold mb-4">Quick Links</h3>
+        <ul class="text-sm space-y-1">
+          <li><a href="/#features" class="hover:text-white">Features</a></li>
+          <li><a href="/detect-video" class="hover:text-white">Detect Video</a></li>
+          <li><a href="/detect-image" class="hover:text-white">Detect Image</a></li>
+          <li><a href="/register" class="hover:text-white">Register</a></li>
+          <li><a href="/about" class="hover:text-white">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">Contact Us</h3>
+        <p class="text-sm">Shreesha Hegde</p>
+        <p class="text-sm">BMS College of Engineering</p>
+        <p class="text-sm">shreesha.mca23@bmsce.ac.in</p>
+        <p class="text-sm">+91&nbsp;90710&nbsp;23691</p>
       </div>
     </div>
-  </div>
-</footer>
+    <div class="border-t border-white/10">
+      <div class="container mx-auto px-6 py-4 flex justify-between text-xs text-gray-400">
+        <p>© 2025 RealVision. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
 
+  <!-- JS SCRIPT -->
+  <script>
+    const btn = document.querySelector('.btn-analyze');
+    const fileI = document.querySelector('input[type=file]');
+    const card = document.getElementById('resultCard');
+    const lbl = document.getElementById('rLabel');
+    const conf = document.getElementById('rConf');
+    const fr = document.getElementById('rFrames');
+    const tm = document.getElementById('rTime');
+    let chart;
 
+    btn.addEventListener('click', async e => {
+      e.preventDefault();
+      const f = fileI.files[0];
+      if (!f) return alert('Choose a video first');
 
+      btn.disabled = true;
+      btn.textContent = 'Processing…';
 
-<!-- ①‑C  ▸ Just before </body> add this tiny JS (keeps your design) -->
-<script>
-const btn   = document.querySelector('.btn-analyze');
-const fileI = document.querySelector('input[type=file]');
-const card  = document.getElementById('resultCard');
-const lbl   = document.getElementById('rLabel');
-const conf  = document.getElementById('rConf');
-const fr    = document.getElementById('rFrames');
-const tm    = document.getElementById('rTime');
-let  chart;
+      const fd = new FormData();
+      fd.append('media', f);
 
-btn.addEventListener('click', async e => {
-  e.preventDefault();
-  const f = fileI.files[0];
-  if (!f) return alert('Choose a video first');
+      try {
+        const res = await fetch('/api/detect-video', { method: 'POST', body: fd });
+        const js = await res.json();
+        if (js.error) throw js.error;
 
-  btn.disabled = true;
-  btn.textContent = 'Processing…';
+        document.getElementById("frameSamples").innerHTML = "";
+        js.sample_frames.forEach(src => {
+          const img = document.createElement("img");
+          img.src = src;
+          img.alt = "Sample frame";
+          img.className = "rounded-lg border-2 border-cyan-400 shadow-lg hover:scale-105 transition-transform duration-300";
+          img.style.width = "160px";
+          document.getElementById("frameSamples").appendChild(img);
+        });
 
-  const fd = new FormData();
-  fd.append('media', f);
+        lbl.textContent = js.label;
+        conf.textContent = (js.confidence * 100).toFixed(1) + '%';
+        fr.textContent = js.frames_analyzed;
+        tm.textContent = js.processing_time.toFixed(2);
 
-  try {
-    const res = await fetch('/api/detect-video', { method:'POST', body:fd });
-    const js  = await res.json();
-    if (js.error) throw js.error;
-    const frameContainer = document.getElementById("frameSamples");
-    frameContainer.innerHTML = "";  // clear old
-    js.sample_frames.forEach(src => {
-    const img = document.createElement("img");
-    img.src = src;
-    img.alt = "Sample frame";
-    img.className = "rounded-lg border-2 border-cyan-400 shadow-lg hover:scale-105 transition-transform duration-300";
-    img.style.width = "160px";
-    img.style.height = "auto";
+        const vals = js.label === 'Fake' ? [js.confidence, 1 - js.confidence] : [1 - js.confidence, js.confidence];
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Fake', 'Real'],
+            datasets: [{ data: vals, backgroundColor: ['#ff4f4f', '#57f4d4'] }]
+          },
+          options: { plugins: { legend: { labels: { color: '#ffffff' } } } }
+        });
 
-    frameContainer.appendChild(img);
-});
-    // fill values
-    lbl.textContent  = js.label;
-    conf.textContent = (js.confidence*100).toFixed(1)+' %';
-    fr.textContent   = js.frames_analyzed;
-    tm.textContent   = js.processing_time.toFixed(2);
-
-    // pie chart (Fake vs Real)
-    const vals = js.label === 'Fake'
-        ? [js.confidence, 1-js.confidence]
-        : [1-js.confidence, js.confidence];
-
-    if (chart) chart.destroy();
-    chart = new Chart(document.getElementById('pieChart'), {
-      type:'doughnut',
-      data:{
-        labels:['Fake','Real'],
-        datasets:[{ data:vals, backgroundColor:['#ff4f4f', '#57f4d4'] }]
-      },
-      options:{plugins:{legend:{labels:{color:'#ffffff'}}}}
+        card.style.opacity = 1;
+        card.style.pointerEvents = 'auto';
+      } catch (err) {
+        alert('Server error: ' + err);
+      } finally {
+        btn.textContent = 'Analyze Video';
+        btn.disabled = false;
+      }
     });
-
-    // reveal card
-    card.style.opacity = 1;
-    card.style.pointerEvents = 'auto';
-
-  } catch(err){
-    alert('Server error: '+err);
-  } finally{
-    btn.textContent='Analyze Video';
-    btn.disabled=false;
-  }
-});
-</script>
-
+  </script>
 </body>
-
 </html>
-

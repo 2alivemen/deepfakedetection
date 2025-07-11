@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detect DeepFake Image</title>
+    <title>Real Vision - Detect DeepFake Image</title>
 
     <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com/"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Chart.js for Pie Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,13 +32,17 @@
     <!-- Navbar -->
     <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
       <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-        <a href="index.html" class="text-lg font-extrabold tracking-wide text-mint">DeepFake Detection</a>
+        <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
         <div class="flex items-center gap-6 text-sm">
-          <a href="detectvideo.html"
+          <a href="/detect-video"
              class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">
             Video Detect
           </a>
-          <a href="#" class="hidden sm:block hover:text-mint transition">Logout</a>
+          {% if current_user.is_authenticated %}
+          <a href="/logout" class="hidden sm:block hover:text-mint transition">Logout</a>
+          {% else %}
+          <a href="/login" class="hidden sm:block hover:text-mint transition">Login</a>
+          {% endif %}
         </div>
       </div>
     </header>
@@ -133,4 +137,39 @@
       });
     </script>
   </body>
+
+  
+  <!-- Footer -->
+  <footer class="bg-[#0b0b0b] text-gray-300 mt-auto">
+    <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
+        <p class="text-sm leading-relaxed">
+          RealVision is a research‑driven platform to detect DeepFakes in real time and promote digital truth.
+        </p>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-mint text-lg font-semibold mb-4">Quick Links</h3>
+        <ul class="text-sm space-y-1">
+          <li><a href="/#features" class="hover:text-white">Features</a></li>
+          <li><a href="/detect-video" class="hover:text-white">Detect Video</a></li>
+          <li><a href="/detect-image" class="hover:text-white">Detect Image</a></li>
+          <li><a href="/register" class="hover:text-white">Register</a></li>
+          <li><a href="/about" class="hover:text-white">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">Contact Us</h3>
+        <p class="text-sm">Shreesha Hegde</p>
+        <p class="text-sm">BMS College of Engineering</p>
+        <p class="text-sm">shreesha.mca23@bmsce.ac.in</p>
+        <p class="text-sm">+91 90710 23691</p>
+      </div>
+    </div>
+    <div class="border-t border-white/10">
+      <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between">
+        <p class="text-xs text-gray-400">© 2025 RealVision. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
 </html>

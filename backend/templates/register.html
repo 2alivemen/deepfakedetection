@@ -1,38 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Register – DeepFake Detection</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register – RealVision</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              mint: '#57F6E9',
-              'mint-h': '#32D0C2',
-              charcoal: '#0e0e1a',
-            },
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#57F6E9',
+            'mint-h': '#32D0C2',
+            charcoal: '#0e0e1a',
           },
         },
-      };
-    </script>
-  </head>
+      },
+    };
+  </script>
+</head>
 
-  <body
-    class="min-h-screen flex items-center justify-center bg-charcoal text-white"
-  >
+<body class="bg-charcoal text-white font-sans flex flex-col min-h-screen">
+
+  <!-- Navbar -->
+  <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-6 text-sm">
+        <a href="/detect-video" class="hover:text-mint transition">Video Detect</a>
+        <a href="/detect-image" class="hover:text-mint transition">Image Detect</a>
+        {% if current_user.is_authenticated %}
+        <a href="/logout" class="hover:text-mint transition">Logout</a>
+        {% endif %}
+      </nav>
+
+      <!-- Mobile Menu Button -->
+      <button id="menuBtn" class="md:hidden text-white focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="md:hidden bg-[#111]/95 backdrop-blur px-4 py-3 hidden">
+      <a href="/detect-video" class="block py-1 text-sm hover:text-mint">Video Detect</a>
+      <a href="/detect-image" class="block py-1 text-sm hover:text-mint">Image Detect</a>
+      {% if current_user.is_authenticated %}
+      <a href="/logout" class="block py-1 text-sm hover:text-mint">Logout</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Register Form -->
+  <main class="flex-grow flex items-center justify-center pt-24 pb-16 px-4">
     <form
       action="/register"
       method="POST"
       class="bg-[#181828] w-full max-w-sm mx-auto p-8 rounded-lg shadow-lg"
       onsubmit="return validatePasswords()"
     >
-      <h1 class="text-2xl font-bold text-mint text-center mb-6">Sign Up</h1>
+      <h1 class="text-2xl font-bold text-mint text-center mb-6">Sign Up</h1>
 
-      <!-- Flash message from backend -->
+      <!-- Flash Messages -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <ul class="mb-4">
@@ -95,21 +130,63 @@
         <a href="/login" class="text-mint hover:underline">Log in</a>
       </p>
       <p class="text-center text-xs text-gray-400 mt-1">
-        <a href="index.html" class="hover:text-mint">&larr; Back Home</a>
+        <a href="/" class="hover:text-mint">&larr; Back Home</a>
       </p>
     </form>
+  </main>
 
-    <!-- Client-side password match -->
-    <script>
-      function validatePasswords() {
-        const pw = document.getElementById("password").value;
-        const cf = document.getElementById("confirm").value;
-        if (pw !== cf) {
-          alert("Passwords do not match!");
-          return false;
-        }
-        return true;
+  <!-- Footer -->
+  <footer class="bg-[#0b0b0b] text-gray-300">
+    <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
+        <p class="text-sm leading-relaxed">
+          RealVision is a research‑driven platform to detect DeepFakes in real time and promote digital truth.
+        </p>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-mint text-lg font-semibold mb-4">Quick Links</h3>
+        <ul class="text-sm space-y-1">
+          <li><a href="/#features" class="hover:text-white">Features</a></li>
+          <li><a href="/detect-video" class="hover:text-white">Detect Video</a></li>
+          <li><a href="/detect-image" class="hover:text-white">Detect Image</a></li>
+          <li><a href="/about" class="hover:text-white">About</a></li>
+          <li><a href="/contact" class="hover:text-white">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-mint text-lg font-semibold mb-4">Contact Us</h3>
+        <p class="text-sm">Shreesha Hegde</p>
+        <p class="text-sm">BMS College of Engineering</p>
+        <p class="text-sm">shreesha.mca23@bmsce.ac.in</p>
+        <p class="text-sm">+91 90710 23691</p>
+      </div>
+    </div>
+    <div class="border-t border-white/10">
+      <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between">
+        <p class="text-xs text-gray-400">© 2025 RealVision. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    function validatePasswords() {
+      const pw = document.getElementById("password").value;
+      const cf = document.getElementById("confirm").value;
+      if (pw !== cf) {
+        alert("Passwords do not match!");
+        return false;
       }
-    </script>
-  </body>
+      return true;
+    }
+
+    // Toggle mobile nav
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</body>
 </html>
