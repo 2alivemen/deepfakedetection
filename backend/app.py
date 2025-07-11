@@ -7,7 +7,7 @@ from PIL import Image
 
 from flask import (
     Flask, request, jsonify,
-    render_template, redirect, url_for, session
+    render_template, redirect, url_for, session, flash
 )
 from flask_login import (
     LoginManager, UserMixin, login_user,
@@ -21,6 +21,17 @@ app.secret_key = "super‑secret‑key"          # change in prod
 UPLOAD_FOLDER = os.path.join("static", "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+# User class for login
+class User(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
+
+        
 # ── Database helper ────────────────────────────────────────
 DB = "logs.db"
 def get_db():
@@ -101,9 +112,14 @@ def login():
         ).fetchone()
         if row:
             login_user(User(row["id"], row["username"]))
-            return redirect(url_for("index"))
-        return "Invalid", 401
+            if u == "admin":
+                return redirect("/status")  # redirect admin
+            else:
+                return redirect("/")        # redirect normal user
+        return "Invalid credentials", 401
     return render_template("login.html")
+
+
 
 @app.route("/logout")
 @login_required
@@ -111,24 +127,32 @@ def logout():
     logout_user()
     return redirect(url_for("login"))
 
-@app.route("/register", methods=["POST"])
+# Register route
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    u = request.form["username"]
-    p1 = request.form["password"]
-    p2 = request.form["confirm"]
-    if p1 != p2:
-        return "Password mismatch", 400
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        confirm  = request.form["confirm"]
 
-    conn = get_db()
-    try:
-        conn.execute("INSERT INTO users (username, password) VALUES (?,?)", (u, p1))
-        conn.commit()
-    except sqlite3.IntegrityError:
-        return "User already exists", 400
-    finally:
-        conn.close()
+        if password != confirm:
+            flash("Passwords do not match", "error")
+            return render_template("register.html")
 
-    return redirect(url_for("login"))
+        # Check if user already exists
+        existing = get_db().execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+        if existing:
+            flash("Username already taken", "error")
+            return render_template("register.html")
+
+        # Insert into DB
+        db = get_db()
+        db.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+        db.commit()
+        flash("Registration successful! Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
 
 
 # ---------- Detection API ----------
