@@ -86,6 +86,10 @@ def index():
 def detect_video_page():
     return render_template("detectvideo.html")
 
+@app.route("/status")
+def status_page():
+    return render_template("status.html")
+
 # ---------- Auth ----------
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -221,7 +225,7 @@ def detect_video():
 
 # ---------- Stats ----------
 @app.get("/api/stats")
-@login_required
+# @login_required
 def stats():
     conn = get_db()
     row  = conn.execute("""

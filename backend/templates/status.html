@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Detection Stats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0e183a;
+      --nav-bg: #191919;
+      --primary-accent: #57f4d4;
+      --input-border: #57f4d4;
+      --text-muted: #7a7a9b;
+      --button-shadow-color: #57f4d4aa;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      font-family: 'Inter', sans-serif;
+    }
+
+    h1 {
+      color: var(--primary-accent);
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Admin Dashboard - DeepFake Detection Stats</h1>
+
+  <section class="card bg-[#182344a6] border border-cyan-300 max-w-5xl mx-auto p-8 rounded-xl">
+    <div class="grid md:grid-cols-2 gap-6 mb-10 text-center">
+      <div>
+        <p class="text-mint text-lg font-medium">Total Videos</p>
+        <p id="statTotal" class="text-white text-2xl font-bold mt-1">–</p>
+      </div>
+      <div>
+        <p class="text-mint text-lg font-medium">Average Confidence</p>
+        <p id="statAvg" class="text-white text-2xl font-bold mt-1">–</p>
+      </div>
+      <div>
+        <p class="text-red-400 text-lg font-medium">Fake Detections</p>
+        <p id="statFake" class="text-white text-2xl font-bold mt-1">–</p>
+      </div>
+      <div>
+        <p class="text-green-300 text-lg font-medium">Real Detections</p>
+        <p id="statReal" class="text-white text-2xl font-bold mt-1">–</p>
+      </div>
+    </div>
+
+    <!-- Chart for uploads per day -->
+    <div class="bg-[#121c3a] rounded-lg p-6">
+      <canvas id="uploadChart" class="w-full h-72"></canvas>
+    </div>
+  </section>
+
+  <script>
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error("Unauthorized or server error");
+        const js = await res.json();
+
+        document.getElementById("statTotal").textContent = js.total;
+        document.getElementById("statAvg").textContent = (js.avg_conf * 100).toFixed(1) + "%";
+        document.getElementById("statFake").textContent = js.fake;
+        document.getElementById("statReal").textContent = js.real;
+
+        const ctx = document.getElementById("uploadChart").getContext("2d");
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: js.daily.map(x => x.day),
+            datasets: [{
+              label: "Uploads per Day",
+              data: js.daily.map(x => x.uploads),
+              borderColor: '#57f4d4',
+              backgroundColor: 'rgba(87, 244, 212, 0.15)',
+              tension: 0.3,
+              fill: true,
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { labels: { color: '#ffffff' } }
+            },
+            scales: {
+              x: { ticks: { color: '#ccc' } },
+              y: { ticks: { color: '#ccc' } }
+            }
+          }
+        });
+      } catch (err) {
+        alert("Error fetching stats: " + err.message);
+      }
+    }
+
+    fetchStats();
+  </script>
+</body>
+
+</html>
