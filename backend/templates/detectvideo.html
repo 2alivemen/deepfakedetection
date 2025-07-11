@@ -3,161 +3,91 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Real Vision - Video Detection</title>
+  <title>Real Vision - Detect DeepFake Video</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg-dark: #0e183a;
-      --nav-bg: #191919;
-      --primary-accent: #57f4d4;
-      --input-border: #57f4d4;
-      --text-muted: #7a7a9b;
-      --button-shadow-color: #57f4d4aa;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      font-family: 'Inter', sans-serif;
-    }
-
-    nav {
-      background-color: var(--nav-bg);
-    }
-
-    .brand,
-    .btn-detect {
-      color: var(--primary-accent);
-      font-weight: 600;
-      font-size: 1.125rem;
-    }
-
-    .btn-detect {
-      background-color: transparent;
-      border: none;
-      padding: 0.375rem 0.875rem;
-      border-radius: 0.25rem;
-      box-shadow: 0 0.25rem 0.5rem var(--button-shadow-color);
-      cursor: pointer;
-    }
-
-    .btn-detect:hover,
-    .btn-detect:focus {
-      background-color: var(--primary-accent);
-      color: #0e183a;
-    }
-
-    .logout {
-      color: white;
-      font-weight: 500;
-      cursor: pointer;
-      font-size: 0.875rem;
-    }
-
-    .card {
-      background-color: rgba(24, 35, 68, 0.65);
-      border-radius: 0.5rem;
-      border: 1px solid rgba(87, 244, 212, 0.4);
-      padding: 2rem 2.5rem;
-      max-width: 420px;
-      margin: auto;
-    }
-
-    input[type="file"] {
-      color: transparent;
-      width: 100%;
-      height: 3.25rem;
-      border-radius: 0.375rem;
-      border: 2px dashed var(--input-border);
-      padding-top: 0.75rem;
-      text-align: center;
-      font-weight: 500;
-    }
-
-    input[type="file"]::before {
-      content: 'Choose Video';
-      color: var(--primary-accent);
-      font-weight: 600;
-    }
-
-    .btn-analyze {
-      background-color: var(--primary-accent);
-      font-weight: 700;
-      font-size: 1.125rem;
-      color: var(--bg-dark);
-      padding: 0.75rem 1.5rem;
-      margin-top: 1.5rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      border: none;
-    }
-
-    h1 {
-      color: var(--primary-accent);
-      font-weight: 700;
-      font-size: 2.25rem;
-      text-align: center;
-      margin-bottom: 0.5rem;
-    }
-
-    p.description {
-      color: var(--text-muted);
-      text-align: center;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
-  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#57F6E9',
+            'mint-h': '#32D0C2',
+            charcoal: '#0e0e1a'
+          }
+        }
+      }
+    };
+  </script>
 </head>
-
-<body>
-  <!-- NAVBAR -->
-  <nav>
-    <div class="flex justify-between items-center px-6 py-3 max-w-6xl mx-auto">
-      <a href="/" class="brand">Real Vision</a>
-      <div class="flex items-center space-x-6">
-        <a href="/detect-image" class="btn-detect">Image Detect</a>
+<body class="min-h-screen bg-charcoal text-white font-sans overflow-x-hidden">
+  <!-- Navbar -->
+  <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="/detect-image"
+           class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">
+          Image Detect
+        </a>
         {% if current_user.is_authenticated %}
-          <a href="/logout" class="logout">Logout</a>
+        <a href="/logout" class="hidden sm:block hover:text-mint transition">Logout</a>
         {% else %}
-          <a href="/login" class="logout">Login</a>
+        <a href="/login" class="hidden sm:block hover:text-mint transition">Login</a>
         {% endif %}
       </div>
     </div>
-  </nav>
+  </header>
 
-  <main class="mt-20">
-    <h1>Detect DeepFake Videos</h1>
-    <p class="description">Upload your video for AI-powered analysis to detect potential manipulation.</p>
+  <main class="pt-24 pb-20 px-6 flex flex-col items-center">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-mint mb-2">Detect DeepFake Videos</h1>
+    <p class="text-gray-300 mb-12 text-center max-w-xl">
+      Upload your video for AI‑powered analysis to detect potential manipulation.
+    </p>
 
-    <section class="card">
-      <form>
-        <input type="file" accept=".mp4, .avi, .mov" />
-        <button type="submit" class="btn-analyze">Analyze Video</button>
+    <!-- Upload Card -->
+    <div class="bg-[#181828] rounded-lg p-10 w-full max-w-md shadow-lg">
+      <h2 class="text-lg font-semibold text-center mb-6">Upload a Video</h2>
+
+      <form id="videoForm">
+        <input id="videoInput" type="file" accept=".mp4,.avi,.mov"
+               class="file:mr-4 file:py-2 file:px-4
+                      file:rounded file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-mint file:text-black
+                      hover:file:bg-mint-h
+                      w-full text-sm text-gray-300 mb-2" />
+        <p class="text-sm text-gray-400 mt-1 mb-4" id="fileInfo"></p>
+
+        <button type="submit"
+                class="bg-mint w-full text-black font-bold py-2.5 rounded hover:bg-mint-h transition btn-analyze">
+          Analyze Video
+        </button>
       </form>
 
-      <p class="text-sm text-center mt-6 text-muted">
-        Supported formats: <strong>MP4, AVI, MOV</strong> (Max size: 100MB)
+      <p class="text-sm text-center mt-6 text-gray-400">
+        Supported formats: <strong>MP4, AVI, MOV</strong> (Max size: 10MB)
       </p>
 
       <!-- RESULT CARD -->
-      <div id="resultCard" class="card mt-10 opacity-0 pointer-events-none transition-all duration-300">
-        <h2 style="color:var(--primary-accent);text-align:center;margin-bottom:1rem;">Analysis Result</h2>
-        <div style="display:grid;gap:0.75rem;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-          <p><span style="color:var(--primary-accent)">Label:</span> <span class="text-white" id="rLabel"></span></p>
-          <p><span style="color:var(--primary-accent)">Confidence:</span> <span class="text-white" id="rConf"></span></p>
-          <p><span style="color:var(--primary-accent)">Frames:</span> <span class="text-white" id="rFrames"></span></p>
-          <p><span style="color:var(--primary-accent)">Time:</span> <span class="text-white" id="rTime">s</span></p>
+      <div id="resultCard" class="mt-10 hidden transition-all">
+        <h2 class="text-mint text-center text-xl font-semibold mb-4">Analysis Result</h2>
+        <div class="grid gap-3 grid-cols-2 text-sm">
+          <p><span class="text-mint">Label:</span> <span id="rLabel" class="text-white"></span></p>
+          <p><span class="text-mint">Confidence:</span> <span id="rConf" class="text-white"></span></p>
+          <p><span class="text-mint">Frames:</span> <span id="rFrames" class="text-white"></span></p>
+          <p><span class="text-mint">Time:</span> <span id="rTime" class="text-white">s</span></p>
         </div>
-        <canvas id="pieChart" style="margin-top:1.5rem;"></canvas>
+        <canvas id="pieChart" class="mt-6"></canvas>
       </div>
-    </section>
+    </div>
 
-    <p class="text-lg font-semibold mx-auto mt-8 text-center text-mint">Sample of Analyzed Frames</p>
+    <p class="text-lg font-semibold mx-auto mt-10 text-center text-white">Sample of Analyzed Frames</p>
     <div id="frameSamples" class="mt-6 flex flex-wrap gap-4 justify-center"></div>
   </main>
 
-  <!-- FOOTER -->
-  <footer class="bg-[#0b0b0b] text-gray-300 mt-20">
+  <!-- Footer -->
+  <footer class="bg-[#0b0b0b] text-gray-300 mt-auto">
     <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
       <div>
         <h3 class="text-mint text-lg font-semibold mb-4">About RealVision</h3>
@@ -180,7 +110,7 @@
         <p class="text-sm">Shreesha Hegde</p>
         <p class="text-sm">BMS College of Engineering</p>
         <p class="text-sm">shreesha.mca23@bmsce.ac.in</p>
-        <p class="text-sm">+91&nbsp;90710&nbsp;23691</p>
+        <p class="text-sm">+91 90710 23691</p>
       </div>
     </div>
     <div class="border-t border-white/10">
@@ -190,10 +120,12 @@
     </div>
   </footer>
 
-  <!-- JS SCRIPT -->
+  <!-- JS Script -->
   <script>
     const btn = document.querySelector('.btn-analyze');
-    const fileI = document.querySelector('input[type=file]');
+    const fileInput = document.getElementById('videoInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const form = document.getElementById('videoForm');
     const card = document.getElementById('resultCard');
     const lbl = document.getElementById('rLabel');
     const conf = document.getElementById('rConf');
@@ -201,10 +133,22 @@
     const tm = document.getElementById('rTime');
     let chart;
 
-    btn.addEventListener('click', async e => {
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files[0];
+      if (f) {
+        const sizeMB = (f.size / 1024 / 1024).toFixed(2);
+        fileInfo.textContent = `${f.name} (${sizeMB} MB)`;
+        fileInfo.style.color = f.size > 10 * 1024 * 1024 ? 'red' : 'white';
+      } else {
+        fileInfo.textContent = '';
+      }
+    });
+
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      const f = fileI.files[0];
-      if (!f) return alert('Choose a video first');
+      const f = fileInput.files[0];
+      if (!f) return alert('Please choose a video file first.');
+      if (f.size > 10 * 1024 * 1024) return alert('File size exceeds 10MB limit.');
 
       btn.disabled = true;
       btn.textContent = 'Processing…';
@@ -243,8 +187,7 @@
           options: { plugins: { legend: { labels: { color: '#ffffff' } } } }
         });
 
-        card.style.opacity = 1;
-        card.style.pointerEvents = 'auto';
+        card.classList.remove('hidden');
       } catch (err) {
         alert('Server error: ' + err);
       } finally {

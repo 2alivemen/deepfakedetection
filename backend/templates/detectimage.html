@@ -1,144 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Real Vision - Detect DeepFake Image</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real Vision - Detect DeepFake Image</title>
 
-    <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Chart.js for Pie Chart -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js for Pie Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Custom colors -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              mint: '#57F6E9',
-              'mint-h': '#32D0C2',
-              charcoal: '#0e0e1a'
-            }
+  <!-- Custom colors -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: '#57F6E9',
+            'mint-h': '#32D0C2',
+            charcoal: '#0e0e1a'
           }
         }
-      };
-    </script>
-  </head>
+      }
+    };
+  </script>
+</head>
 
-  <body class="min-h-screen bg-charcoal text-white font-sans overflow-x-hidden">
+<body class="min-h-screen bg-charcoal text-white font-sans overflow-x-hidden">
 
-    <!-- Navbar -->
-    <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
-      <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
-        <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
-        <div class="flex items-center gap-6 text-sm">
-          <a href="/detect-video"
-             class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">
-            Video Detect
-          </a>
-          {% if current_user.is_authenticated %}
-          <a href="/logout" class="hidden sm:block hover:text-mint transition">Logout</a>
-          {% else %}
-          <a href="/login" class="hidden sm:block hover:text-mint transition">Login</a>
-          {% endif %}
-        </div>
+  <!-- Navbar -->
+  <header class="fixed inset-x-0 top-0 bg-[#111]/95 backdrop-blur h-14 z-50">
+    <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+      <a href="/" class="text-lg font-extrabold tracking-wide text-mint">Real Vision</a>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="/detect-video"
+           class="hidden sm:block bg-mint text-black font-semibold px-4 py-1.5 rounded hover:bg-mint-h transition">
+          Video Detect
+        </a>
+        {% if current_user.is_authenticated %}
+        <a href="/logout" class="hidden sm:block hover:text-mint transition">Logout</a>
+        {% else %}
+        <a href="/login" class="hidden sm:block hover:text-mint transition">Login</a>
+        {% endif %}
       </div>
-    </header>
+    </div>
+  </header>
 
-    <!-- Main Content -->
-    <main class="pt-24 pb-20 px-6 flex flex-col items-center">
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-mint mb-2">Detect DeepFake Image</h1>
-      <p class="text-gray-300 mb-12 text-center max-w-xl">
-        Upload your image for AI‑powered analysis to detect potential manipulation.
-      </p>
+  <!-- Main Content -->
+  <main class="pt-24 pb-20 px-6 flex flex-col items-center">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-mint mb-2">Detect DeepFake Image</h1>
+    <p class="text-gray-300 mb-12 text-center max-w-xl">
+      Upload your image for AI‑powered analysis to detect potential manipulation.
+    </p>
 
-      <!-- Upload Card -->
-      <div class="bg-[#181828] rounded-lg p-10 w-full max-w-md shadow-lg">
-        <h2 class="text-lg font-semibold text-center mb-6">Upload an Image</h2>
+    <!-- Upload Card -->
+    <div class="bg-[#181828] rounded-lg p-10 w-full max-w-md shadow-lg">
+      <h2 class="text-lg font-semibold text-center mb-6">Upload an Image</h2>
 
-        <input type="file" id="imgInput" accept="image/*"
-               class="file:mr-4 file:py-2 file:px-4
-                      file:rounded file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-mint file:text-black
-                      hover:file:bg-mint-h
-                      w-full text-sm text-gray-300 mb-6" />
+      <input type="file" id="imgInput" accept=".png,.jpg,.jpeg,.webp"
+             class="file:mr-4 file:py-2 file:px-4
+                    file:rounded file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-mint file:text-black
+                    hover:file:bg-mint-h
+                    w-full text-sm text-gray-300 mb-2" />
+      <p id="fileInfo" class="text-sm text-gray-400 mt-1 mb-4"></p>
+      <p id="fileError" class="text-sm text-red-400 mb-4 hidden"></p>
 
-        <button id="detectBtn"
-                class="bg-mint w-full text-black font-bold py-2.5 rounded hover:bg-mint-h transition">
-          Detect
-        </button>
+      <button id="detectBtn"
+              class="bg-mint w-full text-black font-bold py-2.5 rounded hover:bg-mint-h transition">
+        Detect
+      </button>
 
-        <!-- Result -->
-        <div id="result" class="mt-8 hidden text-center">
-          <p id="resultText" class="text-lg font-semibold mb-4"></p>
-          <canvas id="pieChart" width="200" height="200"></canvas>
-        </div>
+      <!-- Result -->
+      <div id="result" class="mt-8 hidden text-center">
+        <p id="resultText" class="text-lg font-semibold mb-4"></p>
+        <canvas id="pieChart" width="200" height="200"></canvas>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <!-- JavaScript -->
-    <script>
-      const btn   = document.getElementById('detectBtn');
-      const fileI = document.getElementById('imgInput');
-      const resEl = document.getElementById('result');
-      const resText = document.getElementById('resultText');
-      let chart;
-
-      btn.addEventListener('click', async () => {
-        const file = fileI.files[0];
-        if (!file) return alert('Please choose an image.');
-
-        btn.textContent = 'Detecting...';
-        btn.disabled = true;
-
-        const fd = new FormData();
-        fd.append('media', file);
-
-        try {
-          const r = await fetch('/api/detect-image', { method: 'POST', body: fd });
-          const js = await r.json();   // { label:'Fake', confidence:0.92 }
-
-          const confPct = (js.confidence * 100).toFixed(1);
-          resText.textContent = `${js.label} – ${confPct}% confidence`;
-          resEl.classList.remove('hidden');
-
-          const vals = js.label === 'Fake'
-            ? [js.confidence, 1 - js.confidence]
-            : [1 - js.confidence, js.confidence];
-
-          if (chart) chart.destroy();
-          chart = new Chart(document.getElementById('pieChart'), {
-            type: 'doughnut',
-            data: {
-              labels: ['Fake', 'Real'],
-              datasets: [{
-                data: vals,
-                backgroundColor: ['#ff4f4f', '#57f4d4']
-              }]
-            },
-            options: {
-              plugins: {
-                legend: {
-                  labels: { color: '#fff' }
-                }
-              }
-            }
-          });
-
-        } catch (err) {
-          alert('Error connecting to server');
-        } finally {
-          btn.textContent = 'Detect';
-          btn.disabled = false;
-        }
-      });
-    </script>
-  </body>
-
-  
   <!-- Footer -->
   <footer class="bg-[#0b0b0b] text-gray-300 mt-auto">
     <div class="container mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
@@ -172,4 +114,80 @@
       </div>
     </div>
   </footer>
+
+  <!-- JavaScript -->
+  <script>
+    const btn = document.getElementById('detectBtn');
+    const fileI = document.getElementById('imgInput');
+    const resEl = document.getElementById('result');
+    const resText = document.getElementById('resultText');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileError = document.getElementById('fileError');
+    let chart;
+
+    fileI.addEventListener("change", () => {
+      const file = fileI.files[0];
+      if (file) {
+        fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        if (file.size > 10 * 1024 * 1024) {
+          fileError.textContent = "File too large! Max allowed is 10MB.";
+          fileError.classList.remove("hidden");
+        } else {
+          fileError.classList.add("hidden");
+        }
+      } else {
+        fileInfo.textContent = "";
+        fileError.classList.add("hidden");
+      }
+    });
+
+    btn.addEventListener('click', async () => {
+      const file = fileI.files[0];
+      if (!file) return alert('Please choose an image.');
+      if (file.size > 10 * 1024 * 1024) return alert("File exceeds 10MB limit.");
+
+      btn.textContent = 'Detecting...';
+      btn.disabled = true;
+
+      const fd = new FormData();
+      fd.append('media', file);
+
+      try {
+        const r = await fetch('/api/detect-image', { method: 'POST', body: fd });
+        const js = await r.json(); // { label:'Fake', confidence:0.92 }
+
+        const confPct = (js.confidence * 100).toFixed(1);
+        resText.textContent = `${js.label} – ${confPct}% confidence`;
+        resEl.classList.remove('hidden');
+
+        const vals = js.label === 'Fake'
+          ? [js.confidence, 1 - js.confidence]
+          : [1 - js.confidence, js.confidence];
+
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Fake', 'Real'],
+            datasets: [{
+              data: vals,
+              backgroundColor: ['#ff4f4f', '#57f4d4']
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { labels: { color: '#fff' } }
+            }
+          }
+        });
+
+      } catch (err) {
+        alert('Error connecting to server');
+      } finally {
+        btn.textContent = 'Detect';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
 </html>

@@ -4,6 +4,7 @@ import numpy as np
 from datetime import datetime
 from io import BytesIO
 from PIL import Image
+from flask import session, redirect, url_for
 
 from flask import (
     Flask, request, jsonify,
@@ -104,10 +105,15 @@ def index():
 def detect_video_page():
     return render_template("detectvideo.html")
 
+
 @app.route("/status")
 @login_required
 def status_page():
+    if session.get("username") != "admin":
+        return "Access denied", 403
     return render_template("status.html")
+
+
 
 @app.route("/detect-image")
 @login_required
@@ -128,8 +134,9 @@ def login():
             "SELECT * FROM users WHERE username=? AND password=?", (u, p)
         ).fetchone()
         if row:
+            session['username'] = row['username']
             login_user(User(row["id"], row["username"]))
-            if u == "admin":
+            if session['username'] == "admin":
                 return redirect("/status")  # redirect admin
             else:
                 return redirect("/")        # redirect normal user
@@ -279,6 +286,9 @@ def detect_video():
 @app.get("/api/stats")
 @login_required
 def stats():
+    if session.get("username") != "admin":
+        return "Access denied", 403
+
     conn = get_db()
     row  = conn.execute("""
         SELECT COUNT(*) as total,
@@ -300,6 +310,8 @@ def stats():
         avg_conf=float(row["avg_conf"] or 0),
         daily=[dict(day=d["day"], uploads=d["uploads"]) for d in daily]
     )
+
+
 
 # ---------- Error handler ----------
 @app.errorhandler(404)
