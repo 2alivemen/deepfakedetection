@@ -88,7 +88,7 @@ def check_login():
 
 
 # ── Load Model ──────────────────────────────────────────────
-MODEL = tf.keras.models.load_model("./deepfake_detection_Jupiter_forbalanced_fakeframes.keras")
+MODEL = tf.keras.models.load_model("backend/deepfake_detection_Jupiter_forbalanced_fakeframes.keras")
 
 def preprocess_img(img_bgr):
     img = cv2.resize(img_bgr, (96, 96))
